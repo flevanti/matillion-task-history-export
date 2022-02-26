@@ -24,6 +24,10 @@ const DESTINATIONDATABASESECTION = "SNOWFLAKE"
 
 func main() {
 	bootTime := time.Now()
+
+	generateBuildInfo()
+	checkIfuserWantsJustToSeetheVersion()
+
 	// context is not implemented yet, script has been designed to run scheduler, not as a bckground process.
 	ctxGlobal, ctxGlobalCancel = context.WithCancel(context.Background())
 	defer ctxGlobalCancel()

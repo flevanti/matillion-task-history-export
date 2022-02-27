@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -25,10 +24,8 @@ func generateBuildInfo() {
 	build = hex.EncodeToString(hasher.Sum(nil))[:7]
 }
 
-func checkIfuserWantsJustToSeetheVersion() {
-	var versionFlag = flag.Bool("version", false, "show version")
-	flag.Parse()
-	if *versionFlag {
+func checkIfUserWantsToSeeTheVersion() {
+	if *flagVersion {
 		printVersion()
 		os.Exit(1)
 	}

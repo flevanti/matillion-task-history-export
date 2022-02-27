@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/flevanti/goini v1.2.2
-	github.com/flevanti/mth v1.0.3
+	github.com/flevanti/mth v1.0.4
 	github.com/snowflakedb/gosnowflake v1.6.7
 )
 

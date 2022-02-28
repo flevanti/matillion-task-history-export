@@ -178,11 +178,13 @@ func SaveTaskChildren(taskHeaderId int, taskRoot *mth.TaskT) error {
 	var valuesPlaceholders string
 	var statementCreated bool
 	var stm string
+	var sequence int64
 
 	for _, t := range taskRoot.Tasks {
+		sequence++
 
 		values = append(values, t.TaskID, t.ParentID, t.Type, t.JobID, t.JobName, t.JobRevision, t.JobTimestamp, t.ComponentID, t.ComponentName, t.State,
-			t.RowCount, t.StartTime, t.EndTime, t.EndTime-t.StartTime, t.Message, t.TaskBatchID, taskHeaderId)
+			t.RowCount, t.StartTime, t.EndTime, t.EndTime-t.StartTime, t.Message, t.TaskBatchID, taskHeaderId, sequence)
 
 		// this is inside the loop after the values of the first record has been added so we know how many values for each record and we can generate the placeholders
 		// accordingly.
@@ -193,7 +195,7 @@ func SaveTaskChildren(taskHeaderId int, taskRoot *mth.TaskT) error {
 			valuesPlaceholders = strings.Repeat(valuesPlaceholders, len(taskRoot.Tasks))
 			valuesPlaceholders = strings.TrimRight(valuesPlaceholders, ",")
 			stm = "insert into MATILLION_TASKS_HISTORY (TASKID, PARENTID, TYPE, JOBID, JOBNAME, JOBREVISION, JOBTIMESTAMP, COMPONENTID, COMPONENTNAME, STATE, " +
-				"ROWCOUNT, STARTTIME, ENDTIME, SPENTTIME, MESSAGE, TASKBATCHID,TASK_HEADER_ID) VALUES " + valuesPlaceholders
+				"ROWCOUNT, STARTTIME, ENDTIME, SPENTTIME, MESSAGE, TASKBATCHID,TASK_HEADER_ID, TASK_SEQUENCE) VALUES " + valuesPlaceholders
 		}
 	}
 

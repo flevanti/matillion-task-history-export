@@ -174,6 +174,10 @@ func SaveTask(inisection, sessionId string, t *mth.TaskT) error {
 
 func SaveTaskChildren(taskHeaderId int, taskRoot *mth.TaskT) error {
 
+	if len(taskRoot.Tasks) == 0 {
+		return nil
+	}
+
 	var values []interface{}
 	var valuesPlaceholders string
 	var statementCreated bool

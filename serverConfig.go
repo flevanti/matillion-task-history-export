@@ -164,46 +164,45 @@ func (s *serverConfig) exportHistory(iniSection, group string, project string) e
 	return nil
 }
 
-//
-//func (s *serverConfig) checkStuckTasks() error {
-//	var taskRunning bool
-//	var taskQueued bool
-//	var taskHasHistory bool
-//	var taskAverageQueuedTime int64
-//	var taskAverageRunningTime int64
-//
-//	groups, err := s.client.GetGroups()
-//	if err != nil {
-//		return err
-//	}
-//	for _, group := range groups {
-//		projects, err := s.client.GetProjects(group)
-//		if err != nil {
-//			return err
-//		}
-//		for _, project := range projects {
-//			fmt.Printf("Checking matillion project [%s].[%s]\n", group, project)
-//			ch, err := s.client.GetRunningTasks(group, project)
-//			if err != nil {
-//				return err
-//			}
-//			for taskWrapper := range ch {
-//				taskRunning = false
-//				taskQueued = false
-//				switch taskWrapper.Task.State {
-//				case "RUNNING":
-//					taskRunning = true
-//					break
-//				case "QUEUED":
-//					taskQueued = true
-//					break
-//				default:
-//					//nothing to see here... should we just log this unexpected situation?
-//					lge(fmt.Sprintf("We found a task running but not in the state expected!\n\n%s", taskWrapper.Task))
-//				} //end switch
-//
-//			} //end for ch
-//		} //end range projects
-//	} // end range groups
-//	return nil
-//}
+func (s *serverConfig) checkStuckTasks() error {
+	var taskRunning bool
+	var taskQueued bool
+	var taskHasHistory bool
+	var taskAverageQueuedTime int64
+	var taskAverageRunningTime int64
+
+	groups, err := s.client.GetGroups()
+	if err != nil {
+		return err
+	}
+	for _, group := range groups {
+		projects, err := s.client.GetProjects(group)
+		if err != nil {
+			return err
+		}
+		for _, project := range projects {
+			fmt.Printf("Checking matillion project [%s].[%s]\n", group, project)
+			ch, err := s.client.GetRunningTasks(group, project)
+			if err != nil {
+				return err
+			}
+			for taskWrapper := range ch {
+				taskRunning = false
+				taskQueued = false
+				switch taskWrapper.Task.State {
+				case "RUNNING":
+					taskRunning = true
+					break
+				case "QUEUED":
+					taskQueued = true
+					break
+				default:
+					//nothing to see here... should we just log this unexpected situation?
+					lge(fmt.Sprintf("We found a task running but not in the state expected!\n\n%s", taskWrapper.Task))
+				} //end switch
+
+			} //end for ch
+		} //end range projects
+	} // end range groups
+	return nil
+}

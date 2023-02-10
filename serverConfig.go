@@ -146,12 +146,64 @@ func (s *serverConfig) exportHistory(iniSection, group string, project string) e
 		ldb(fmt.Sprintf("processing task ID %d found in range %s %s -> %s %s", taskWrapper.Task.ID, taskWrapper.TimeRangeStartDate, taskWrapper.TimeRangeStartTime, taskWrapper.TimeRangeEndDate, taskWrapper.TimeRangeEndTime))
 		if checkIfTaskAlreadySaved(group, project, taskWrapper.Task.ID) {
 			ldb(fmt.Sprintf("Task %d skipped, already processed", taskWrapper.Task.ID))
-			fmt.Print("🟦")
+			if taskWrapper.Task.State == "SUCCESS" {
+				fmt.Print("🟦")
+			} else {
+				fmt.Print("🟪")
+			}
 			continue
 		}
 		failOnError(SaveTask(iniSection, sessionId, &taskWrapper.Task))
-		fmt.Print("🟩")
+		if taskWrapper.Task.State == "SUCCESS" {
+			fmt.Print("🟩")
+		} else {
+			fmt.Print("🟧")
+		}
 	}
 	fmt.Println()
 	return nil
 }
+
+//
+//func (s *serverConfig) checkStuckTasks() error {
+//	var taskRunning bool
+//	var taskQueued bool
+//	var taskHasHistory bool
+//	var taskAverageQueuedTime int64
+//	var taskAverageRunningTime int64
+//
+//	groups, err := s.client.GetGroups()
+//	if err != nil {
+//		return err
+//	}
+//	for _, group := range groups {
+//		projects, err := s.client.GetProjects(group)
+//		if err != nil {
+//			return err
+//		}
+//		for _, project := range projects {
+//			fmt.Printf("Checking matillion project [%s].[%s]\n", group, project)
+//			ch, err := s.client.GetRunningTasks(group, project)
+//			if err != nil {
+//				return err
+//			}
+//			for taskWrapper := range ch {
+//				taskRunning = false
+//				taskQueued = false
+//				switch taskWrapper.Task.State {
+//				case "RUNNING":
+//					taskRunning = true
+//					break
+//				case "QUEUED":
+//					taskQueued = true
+//					break
+//				default:
+//					//nothing to see here... should we just log this unexpected situation?
+//					lge(fmt.Sprintf("We found a task running but not in the state expected!\n\n%s", taskWrapper.Task))
+//				} //end switch
+//
+//			} //end for ch
+//		} //end range projects
+//	} // end range groups
+//	return nil
+//}

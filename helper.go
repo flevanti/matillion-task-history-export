@@ -27,6 +27,9 @@ func lgi(msg string) {
 func lge(msg string) {
 	lg(msg, "ERROR")
 }
+func lgw(msg string) {
+	lg(msg, "WARNING")
+}
 
 func lg(msg string, level string) {
 	r := logRecordT{session: sessionId, msg: msg, msgDate: time.Now().Format(time.RFC850), msgUnix: time.Now().UnixMilli(), level: level}

@@ -25,6 +25,8 @@ var flagGetSingleTaskId *bool
 var flagIniSection *string
 var flagTaskid *int64
 var flagVersion *bool
+var flagExportHistory *bool
+var flagCheckStuck *bool
 
 const INIFILE = "config.ini"
 const INCLUDEALL = "*"
@@ -54,18 +56,28 @@ func main() {
 	failOnError(createMatillionClients())
 	failOnError(checkMatillionCredentials())
 
-	checkIfUserwantsToRetrieveSpecificTaskIdHistory()
+	if *flagExportHistory == true {
+		lgi(fmt.Sprintf("EXPORTING HISTORY"))
+		checkIfUserwantsToRetrieveSpecificTaskIdHistory()
 
-	// DB CONFIGURATION
-	failOnError(importDestinationDatabaseConfiguration(iniConfig))
-	failOnError(checkDbCredentials())
+		// DB CONFIGURATION
+		failOnError(importDestinationDatabaseConfiguration(iniConfig))
+		failOnError(checkDbCredentials())
 
-	// if we are here db credentials are ok, start the db logger
-	go dbLogger()
+		// if we are here db credentials are ok, start the db logger
+		go dbLogger()
 
-	lgi("Exporting task history")
-	for _, sc := range serversConfigs {
-		failOnError(sc.exportHistoryMainLoop())
+		for _, sc := range serversConfigs {
+			failOnError(sc.exportHistoryMainLoop())
+		}
+	}
+
+	if *flagCheckStuck == true {
+		lgi(fmt.Sprintf("CHECK TASKS STUCK"))
+		//for _, sc := range serversConfigs {
+		//	failOnError(sc.checkStuckTasks())
+		//}
+
 	}
 
 	fmt.Printf("\n\n\nProcess completed, it took %s\n\n", time.Since(bootTime))
@@ -78,6 +90,8 @@ func storeFlags() {
 	flagIniSection = flag.String("inisection", "", "The name of the ini section to use for the Matillion configuration")
 	flagTaskid = flag.Int64("taskid", 0, "The task id to retrieve")
 	flagVersion = flag.Bool("version", false, "show version")
+	flagExportHistory = flag.Bool("exporthistory", true, "export history")
+	flagCheckStuck = flag.Bool("checkstucktasks", false, "check running tasks that are stuck")
 
 	flag.Parse()
 

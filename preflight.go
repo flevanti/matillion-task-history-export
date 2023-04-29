@@ -90,7 +90,9 @@ func importDestinationDatabaseConfiguration(iniConfig *goini.INI) error {
 	if destinationDatabaseConfig.dbWarehouse, found = iniConfig.SectionGet(DESTINATIONDATABASESECTION, "DBWAREHOUSE"); !found {
 		return errors.New(fmt.Sprintf("unable to find [DBWAREHOUSE] in [%s] section", DESTINATIONDATABASESECTION))
 	}
-
+	if destinationDatabaseConfig.dbPort, found = iniConfig.SectionGetInt(DESTINATIONDATABASESECTION, "DBPORT"); !found {
+		return errors.New(fmt.Sprintf("unable to find [DBWAREHOUSE] in [%s] section", DESTINATIONDATABASESECTION))
+	}
 	if destinationDatabaseConfig.dbTableLog != "" {
 		destinationDatabaseConfig.useLog = true
 	}

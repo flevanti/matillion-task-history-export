@@ -23,6 +23,7 @@ type destinationDatabaseConfigT struct {
 	dbTableHeader  string
 	dbTableDetails string
 	dbTableLog     string
+	dbPort         int
 	useLog         bool
 	dbClient       *sql.DB
 }
@@ -36,6 +37,7 @@ func (c *destinationDatabaseConfigT) getDsn() (string, error) {
 		Warehouse: c.dbWarehouse,
 		Schema:    c.dbSchema,
 		Database:  c.dbName,
+		Port:      c.dbPort,
 	}
 
 	dsn, err := sf.DSN(cfg)

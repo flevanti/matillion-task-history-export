@@ -172,6 +172,11 @@ func (s *serverConfig) checkRunningTasks() ([]mth.TaskWrapperT, error) {
 	//var taskAverageRunningTime int64
 	var tasksRunning []mth.TaskWrapperT
 
+	if !s.Enabled {
+		lgi("iniSection is disabled")
+		return tasksRunning, nil
+	}
+
 	groups, err := s.client.GetGroups()
 	if err != nil {
 		return tasksRunning, err

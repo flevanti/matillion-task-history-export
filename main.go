@@ -68,6 +68,7 @@ func main() {
 		go dbLogger()
 
 		for _, sc := range serversConfigs {
+			lgi(fmt.Sprintf("[%s]", sc.ConfigName))
 			failOnError(sc.exportHistoryMainLoop())
 		}
 	}
@@ -79,6 +80,7 @@ func main() {
 	if *flagCheckRunningTasks == true {
 		lgi(fmt.Sprintf("CHECK TASKS RUNNING RIGHT NOW"))
 		for _, sc := range serversConfigs {
+			lgi(fmt.Sprintf("[%s]", sc.ConfigName))
 			tasks, err := sc.checkRunningTasks()
 			failOnError(err)
 			lgi(fmt.Sprintf("Found %d tasks running...", len(tasks)))

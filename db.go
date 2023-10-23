@@ -157,13 +157,13 @@ func SaveTask(inisection, sessionId string, t *mth.TaskT) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(stm, values...)
+	_, err = tx.Exec(stm, values...)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = SaveTaskChildren(taskHeaderId, t)
+	err = SaveTaskChildren(taskHeaderId, t, tx)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -174,41 +174,59 @@ func SaveTask(inisection, sessionId string, t *mth.TaskT) error {
 	return err
 }
 
-func SaveTaskChildren(taskHeaderId int, taskRoot *mth.TaskT) error {
+func SaveTaskChildren(taskHeaderId int, taskRoot *mth.TaskT, tx *sql.Tx) error {
 
 	if len(taskRoot.Tasks) == 0 {
 		return nil
 	}
 
 	var values []interface{}
+	var valuesPlaceholdersBase string
 	var valuesPlaceholders string
-	var statementCreated bool
+	var stmBase string
 	var stm string
 	var sequence int64
+	var batchMaxRecords = 16000 //snowflake limit is 16384, this is to play safe....
+	var batchRecordsCount = 0
 
 	for _, t := range taskRoot.Tasks {
 		sequence++
+		batchRecordsCount++
 
 		values = append(values, t.TaskID, t.ParentID, t.Type, t.JobID, t.JobName, t.JobRevision, t.JobTimestamp, t.ComponentID, t.ComponentName, t.State,
 			t.RowCount, t.StartTime, t.EndTime, t.EndTime-t.StartTime, t.Message, t.TaskBatchID, taskHeaderId, sequence)
 
-		// this is inside the loop after the values of the first record has been added so we know how many values for each record and we can generate the placeholders
+		// this is inside the loop after the values of the first record has been added, so we know how many values for each record and we can generate the placeholders
 		// accordingly.
 		// just to avoid to have to count them and hardcode a number
-		if !statementCreated {
-			statementCreated = true
-			valuesPlaceholders = "(" + strings.TrimRight(strings.Repeat("?,", len(values)), ",") + "),"
-			valuesPlaceholders = strings.Repeat(valuesPlaceholders, len(taskRoot.Tasks))
-			valuesPlaceholders = strings.TrimRight(valuesPlaceholders, ",")
-			stm = "insert into MATILLION_TASKS_HISTORY (TASKID, PARENTID, TYPE, JOBID, JOBNAME, JOBREVISION, JOBTIMESTAMP, COMPONENTID, COMPONENTNAME, STATE, " +
-				"ROWCOUNT, STARTTIME, ENDTIME, SPENTTIME, MESSAGE, TASKBATCHID,TASK_HEADER_ID, TASK_SEQUENCE) VALUES " + valuesPlaceholders
+		if sequence == 1 {
+			valuesPlaceholdersBase = "(" + strings.TrimRight(strings.Repeat("?,", len(values)), ",") + ")," // this is basically (?,?,?,?,),
+			stmBase = "insert into MATILLION_TASKS_HISTORY (TASKID, PARENTID, TYPE, JOBID, JOBNAME, JOBREVISION, JOBTIMESTAMP, COMPONENTID, COMPONENTNAME, STATE, " +
+				"ROWCOUNT, STARTTIME, ENDTIME, SPENTTIME, MESSAGE, TASKBATCHID,TASK_HEADER_ID, TASK_SEQUENCE) VALUES "
 		}
-	}
 
-	db, _ := destinationDatabaseConfig.getDbClient()
-	_, err := db.Exec(stm, values...)
-	if err != nil {
-		return err
+		if batchRecordsCount >= batchMaxRecords {
+			valuesPlaceholders = strings.Repeat(valuesPlaceholdersBase, batchRecordsCount)
+			valuesPlaceholders = strings.TrimRight(valuesPlaceholders, ",")
+			stm = stmBase + valuesPlaceholders
+			_, err := tx.Exec(stm, values...)
+			if err != nil {
+				return err
+			}
+			values = nil
+			batchRecordsCount = 0
+		}
+	} //end for loop tasks
+
+	//if there are still records pending to be saved in the buffer... save them...
+	if batchRecordsCount > 1 {
+		valuesPlaceholders = strings.Repeat(valuesPlaceholdersBase, batchRecordsCount)
+		valuesPlaceholders = strings.TrimRight(valuesPlaceholders, ",")
+		stm = stmBase + valuesPlaceholders
+		_, err := tx.Exec(stm, values...)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

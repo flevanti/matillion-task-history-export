@@ -19,7 +19,7 @@ func createMatillionClients() error {
 
 func checkMatillionCredentials() error {
 	for k, v := range serversConfigs {
-		lgi(fmt.Sprintf("Checking matillion client for section [%s]", k))
+		lgi(fmt.Sprintf("Checking matillion client credentials for section [%s]", k))
 		err := v.client.CheckConnection()
 		if err != nil {
 			return err
@@ -108,6 +108,18 @@ func importConfigurationSection(section string, ini *goini.INI) error {
 	c := serverConfig{}
 	c.ConfigName = section
 
+	// retrieve immediately the enabled flag and determine if the ini section should be imported
+	c.Enabled, found = ini.SectionGetBool(section, "ENABLED")
+	if !found {
+		return errors.New("[ENABLED] not found in section [section]")
+	}
+
+	if !c.Enabled {
+		//section is not enable, return and don't import
+		lgi(fmt.Sprintf("Section not enabled, it has been skipped."))
+		return nil
+	}
+
 	c.BaseUrl, found = ini.SectionGet(section, "BASEURL")
 	if !found {
 		return errors.New("[BASEURL] not found in section [section]")
@@ -121,11 +133,6 @@ func importConfigurationSection(section string, ini *goini.INI) error {
 	c.ApiPassword, found = ini.SectionGet(section, "APIPASSWORD")
 	if !found {
 		return errors.New("[APIPASSWORD] not found in section [section]")
-	}
-
-	c.Enabled, found = ini.SectionGetBool(section, "ENABLED")
-	if !found {
-		return errors.New("[ENABLED] not found in section [section]")
 	}
 
 	stringToSplit, found = ini.SectionGet(section, "GROUPSTOINCLUDE")
@@ -147,6 +154,7 @@ func importConfigurationSection(section string, ini *goini.INI) error {
 	c.ProjectsToInclude = splitAndTrim(stringToSplit)
 
 	serversConfigs[section] = c
+	lgi(fmt.Sprintf("Section imported."))
 
 	return nil
 }

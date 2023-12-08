@@ -147,17 +147,17 @@ func (s *serverConfig) exportHistory(iniSection, group string, project string) e
 		if checkIfTaskAlreadySaved(group, project, taskWrapper.Task.ID) {
 			ldb(fmt.Sprintf("Task %d skipped, already processed", taskWrapper.Task.ID))
 			if taskWrapper.Task.State == "SUCCESS" {
-				fmt.Print("🟦")
+				fmt.Print("🟦") //already saved - success status
 			} else {
-				fmt.Print("🟪")
+				fmt.Print("🟪") //already saved - failed status
 			}
 			continue
 		}
 		failOnError(SaveTask(iniSection, sessionId, &taskWrapper.Task))
 		if taskWrapper.Task.State == "SUCCESS" {
-			fmt.Print("🟩")
+			fmt.Print("🟩") //saved! - success status
 		} else {
-			fmt.Print("🟧")
+			fmt.Print("🟧") //saved - failed status
 		}
 	}
 	fmt.Println()
